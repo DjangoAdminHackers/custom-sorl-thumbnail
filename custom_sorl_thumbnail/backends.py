@@ -1,5 +1,5 @@
 import os, re
-import ImageEnhance
+from PIL import ImageEnhance
 from PIL import Image, ImageFilter, ImageChops, ImageOps
 from sorl.thumbnail.base import ThumbnailBackend
 from django.template.defaultfilters import slugify
