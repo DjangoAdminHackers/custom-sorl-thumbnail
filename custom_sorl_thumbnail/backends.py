@@ -1,7 +1,7 @@
 import os, re
 from PIL import ImageEnhance
 from PIL import Image, ImageFilter, ImageChops, ImageOps
-from sorl.thumbnail.base import ThumbnailBackend
+from sorl.thumbnail.base import ThumbnailBackend, EXTENSIONS
 from django.template.defaultfilters import slugify
 from django.conf import settings
 from sorl.thumbnail import default
@@ -21,7 +21,7 @@ class SEOThumbnailBackend(ThumbnailBackend):
         split_path = re.sub(r'^%s%s?' % (source.storage.path(''), os.sep), '', source.name).split(os.sep)
         split_path.insert(-1, geometry_string)
 
-        #make some subdirs to avoid putting too many files in a single dir. 
+        #make some subdirs to avoid putting too many files in a single dir.
         key = tokey(source.key, geometry_string, serialize(options))
         split_path.insert(-1, key[:2])
         split_path.insert(-1, key[2:4])
@@ -29,18 +29,19 @@ class SEOThumbnailBackend(ThumbnailBackend):
         #attempt to slugify the filename to make it SEO-friendly
         split_name = split_path[-1].split('.')
         try:
-            split_path[-1] = '%s.%s' % (slugify('.'.join(split_name[:-1])), split_name[-1])
+            split_path[-1] = '%s.%s' % (slugify('.'.join(split_name[:-1])),
+                                        EXTENSIONS[options['format']])
         except:
             #on fail keep the original filename
             pass
-        
+
         path = os.sep.join(split_path)
-        
+
         #if the path already starts with THUMBNAIL_PREFIX do not concatenate the PREFIX
         #this way we avoid ending up with a url like /images/images/120x120/my.png
         if not path.startswith(settings.THUMBNAIL_PREFIX):
-            return '%s%s' % (settings.THUMBNAIL_PREFIX, path) 
-        
+            return '%s%s' % (settings.THUMBNAIL_PREFIX, path)
+
         return path
 
 
@@ -72,7 +73,7 @@ class SafeSEOThumbnailBackend(SEOThumbnailBackend):
             source.set_size(size)
             ### customization: race condition, do not raise an OSError when the dir exists.
             # see sorl.thumbnail.images.ImageFile.write, it's not safe to simply throw
-            # /sub/dir/name.jpg to django.core.files.storage.FileSystemStorage._save 
+            # /sub/dir/name.jpg to django.core.files.storage.FileSystemStorage._save
             full_path = thumbnail.storage.path(name)
             directory = os.path.dirname(full_path)
             if not os.path.exists(directory):
