@@ -2,7 +2,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 setup(name='custom-sorl-thumbnail',
-      version='0.1',
+      version='0.2',
       description='custom sorl thumbnail',
       author='Fruitschen',
       author_email='fruitschen@gmail.com',
