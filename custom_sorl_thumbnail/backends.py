@@ -1,4 +1,8 @@
 import os, re
+from math import floor
+
+from PIL import Image
+from PIL import ImageChops
 from PIL import ImageEnhance
 from PIL import ImageOps
 from sorl.thumbnail.base import EXTENSIONS, logger
@@ -167,3 +171,100 @@ def autocrop(im, requested_size, opts):
         #     im = im.crop(bbox)
     return im
 
+
+# Following were taken from common.thumbnail_processors
+# and probably need updating
+
+
+ROUND_VALID_OPTIONS = (
+    "round",
+    "round-box",
+    "round-wide",
+)
+
+THUMBNAIL_PADDING_COLOUR = (255, 255, 255)
+
+
+def fit(image, requested_size, opts):
+    
+    if 'fit_y' in opts:
+        proportions = float(image.size[0]) / image.size[1]
+        new_height = requested_size[1]
+        new_size = (float(new_height)*proportions, new_height)
+        return image.resize(new_size, resample=Image.ANTIALIAS)
+
+    elif 'fit_x' in opts:
+        proportions = float(image.size[0]) / image.size[1]
+        new_width = requested_size[0]
+        new_size = (new_width, float(new_width)*(1/proportions))
+        return image.resize(new_size, resample=Image.ANTIALIAS)
+    
+    else:
+        return image
+fit.valid_options = ['fit_x', 'fit_y']
+
+
+def invert(image, requested_size, opts):
+    if 'invert' in opts:
+        return ImageChops.invert(image)
+    else:
+        return image
+invert.valid_options = ['invert']
+
+
+def pad(im, requested_size, opts):
+    """
+    Adds padding around the image to match the requested_size
+    """
+    if "pad" in opts and im.size != requested_size:
+        canvas = Image.new("RGB", requested_size, THUMBNAIL_PADDING_COLOUR)
+
+        left = floor((requested_size[0] - im.size[0]) / 2)
+        top = floor((requested_size[1] - im.size[1]) / 2)
+
+        canvas.paste(im, (left, top))
+
+        im = canvas
+
+    return im
+pad.valid_options = ("pad", )
+
+
+def round(im, requested_size, opts):
+    """
+    Adds rounded corners around the image
+    """
+    try:
+        mask_type = filter(lambda x: x in ROUND_VALID_OPTIONS, opts)[0]
+    except IndexError:
+        mask_type = None
+
+    if mask_type:
+        mask = Image.open(os.path.join(THUMBNAIL_ROUND_MASKS_PATH, "%s.png" % mask_type))
+
+        im.paste(mask, (0, 0), mask)
+
+    return im
+round.valid_options = ROUND_VALID_OPTIONS
+
+
+# Letterbox
+def ltbx(im, requested_size, opts):
+    img_x, img_y = [float(v) for v in im.size]
+    dest_x, dest_y = [float(v) for v in requested_size]
+
+    if 'ltbx' in opts and im.size != requested_size:
+        img_ratio = img_x/img_y
+        dest_ratio = dest_x/dest_y
+        if dest_ratio > img_ratio:
+            im = im.resize(( int(dest_y*img_ratio), dest_y ) , resample=Image.ANTIALIAS)
+        else:
+            im = im.resize(( dest_x, int(dest_x/img_ratio) ) , resample=Image.ANTIALIAS)
+        canvas = Image.new("RGB", requested_size, THUMBNAIL_PADDING_COLOR)
+        left = floor((requested_size[0] - im.size[0]) / 2)
+        top = floor((requested_size[1] - im.size[1]) / 2)
+        canvas.paste(im, (left, top))
+        im = canvas
+
+    return im
+ltbx.valid_options = ('ltbx', )
