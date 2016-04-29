@@ -151,6 +151,8 @@ def autocrop(im, requested_size, opts):
     
     if 'autocrop' in opts:
         image = ImageEnhance.Brightness(im).enhance(1.12)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
         inverted_image = ImageOps.invert(image)
         bbox = inverted_image.getbbox()
         if bbox:
