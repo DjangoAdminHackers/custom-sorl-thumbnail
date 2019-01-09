@@ -140,8 +140,8 @@ class SafeSEOThumbnailBackend(SEOThumbnailBackend):
                                                      options, thumbnail.name)
             finally:
                 default.engine.cleanup(source_image)
-                
-        options['mtime'] = os.path.getmtime(source.storage.path(source))  # Customization
+        
+        options['mtime'] = os.path.getmtime(source.storage.path(source.name))  # Customization
 
         # If the thumbnail exists we don't create it, the other option is
         # to delete and write but this could lead to race conditions so I
