@@ -7,7 +7,6 @@ from PIL import ImageEnhance
 from PIL import ImageOps
 from sorl.thumbnail.base import EXTENSIONS, logger
 from django.template.defaultfilters import slugify
-from sorl.thumbnail.compat import text_type
 from sorl.thumbnail.conf import settings, defaults as default_settings
 from sorl.thumbnail import default
 from sorl.thumbnail.base import ThumbnailBackend
@@ -104,7 +103,7 @@ class SafeSEOThumbnailBackend(SEOThumbnailBackend):
                     # if S3Storage says file doesn't exist remotely, don't try to
                     # create it and exit early.
                     # Will return working empty image type; 404'd image
-                    logger.warn(text_type('Remote file [%s] at [%s] does not exist'),
+                    logger.warn('Remote file [%s] at [%s] does not exist',
                                 file_, geometry_string)
 
                     return thumbnail
