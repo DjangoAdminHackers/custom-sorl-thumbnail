@@ -23,9 +23,6 @@ class SafeThumbnailNode(ThumbnailNode):
     This template tag ignores settings.THUMBNAIL_BACKEND
     It always uses the SafeSEOThumbnailBackend. 
     '''
-    child_nodelists = ('nodelist_file', 'nodelist_empty')
-    error_msg = ('Syntax error. Expected: ``thumbnail source geometry '
-                 '[key1=val1 key2=val2...] as var``')
 
     def _render(self, context):
         file_ = self.file_.resolve(context)
@@ -33,23 +30,34 @@ class SafeThumbnailNode(ThumbnailNode):
         options = {}
         for key, expr in self.options:
             noresolve = {u'True': True, u'False': False, u'None': None}
-            value = noresolve.get(unicode(expr), expr.resolve(context))
+            value = noresolve.get(str(expr), expr.resolve(context))
             if key == 'options':
                 options.update(value)
             else:
                 options[key] = value
-        if settings.THUMBNAIL_DUMMY:
-            thumbnail = DummyImageFile(geometry)
-        elif file_:
+
+        thumbnail = None
+        if file_:
             thumbnail = custom_backend.get_thumbnail(###customization
                 file_, geometry, **options
                 )
+        elif settings.THUMBNAIL_DUMMY:
+            thumbnail = DummyImageFile(geometry)
+
+        if not thumbnail or (isinstance(thumbnail, DummyImageFile) and self.nodelist_empty):
+            if self.nodelist_empty:
+                return self.nodelist_empty.render(context)
+            else:
+                return ''
+
+        if self.as_var:
+            context.push()
+            context[self.as_var] = thumbnail
+            output = self.nodelist_file.render(context)
+            context.pop()
         else:
-            return self.nodelist_empty.render(context)
-        context.push()
-        context[self.as_var] = thumbnail
-        output = self.nodelist_file.render(context)
-        context.pop()
+            output = thumbnail.url
+
         return output
 
 
