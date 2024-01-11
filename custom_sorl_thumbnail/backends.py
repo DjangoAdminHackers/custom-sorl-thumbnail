@@ -115,7 +115,10 @@ class SafeSEOThumbnailBackend(SEOThumbnailBackend):
 
             # Customization
             if options.get('autocrop', None):
-                source_image = autocrop(source_image, geometry_string, options)
+                try:
+                    source_image = autocrop(source_image, geometry_string, options)
+                except ValueError:
+                    pass
             # End of customization
 
             source.set_size(size)
