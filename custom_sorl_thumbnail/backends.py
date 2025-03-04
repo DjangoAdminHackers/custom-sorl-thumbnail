@@ -131,6 +131,8 @@ class SafeSEOThumbnailBackend(SEOThumbnailBackend):
             if not os.path.exists(directory):
                 try:
                     os.makedirs(directory)
+                    # set permissions for the created thumbnail directory
+                    os.chmod(directory, 0o755)
                 except OSError:
                     pass
             # End of customization
