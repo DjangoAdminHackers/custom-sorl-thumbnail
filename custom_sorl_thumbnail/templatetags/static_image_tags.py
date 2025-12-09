@@ -1,6 +1,6 @@
 from django.template import Library
 from django.core.files.images import ImageFile
-from django.core.files.storage import get_storage_class
+from django.core.files.storage import storages
 register = Library()
 
 @register.filter
@@ -11,7 +11,7 @@ def static_image(path):
     {% endthumbnail %}
     """
     from django.conf import settings
-    storage_class = get_storage_class(settings.STATICFILES_STORAGE)
+    storage_class = storages[settings.STATICFILES_STORAGE]
     storage = storage_class()
     image = ImageFile(storage.open(path))
     image.storage = storage
